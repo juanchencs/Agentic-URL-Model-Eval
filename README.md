@@ -74,8 +74,8 @@ Agentic-URL-Model-Eval/
 
 Configured in-file in script `main()`:
 
-- `MODEL_VERSION_NEW` (e.g., `"20250301"`) — alias **MLP1**
-- `MODEL_VERSION_OLD` (e.g., `"20240604"`) — alias **ML**
+- `MODEL_VERSION_NEW` (e.g., `"20250101"`) — alias **MLP1** 
+- `MODEL_VERSION_OLD` (e.g., `"20240101"`) — alias **ML**
 - `OUTPUT_FOLDER` (e.g., `/home/ubuntu/efs/urlmodel/data/output_data/`)
 - `MODEL_ID` (e.g., `anthropic.claude-opus-4-6-v1`)
 
@@ -107,9 +107,8 @@ Edit `main(CONFLUENCE_PUBLISH=...)` in `src/ai_2models10datasets.py` and set:
 
 - `CONFLUENCE_PUBLISH=True`
 - parent page id / space / base URL
-- credentials file path (e.g. `wiki_jane.txt`)
+- credentials file path (e.g. `****config`)
 
 ## Notes
 
-- Cost Explorer does not natively attribute by IAM role without tags; see docs for attribution assumptions where applicable.
 - Confluence publishing requires valid API token and page permissions.
