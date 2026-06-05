@@ -23,6 +23,8 @@ data/output_data/
 *.jpeg
 *.webp
 *.log
+!docs/images/
+!docs/images/*.png
 
 # Secrets
 wiki_jane.txt
