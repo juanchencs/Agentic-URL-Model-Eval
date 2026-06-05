@@ -13,7 +13,7 @@ Agentic workflow for comparing two URL/domain ML model versions across multiple 
 - Validates required columns:
   - `score{MODEL_VERSION_NEW}`
   - `score{MODEL_VERSION_OLD}`
-- Computes conviction metrics at threshold `score >= 30`
+- Computes conviction metrics at threshold `score >= threshold`
 - Applies winner logic:
   - **FP datasets (`clean`)**: fewer convictions wins
   - **FN datasets (`mal`)**: more convictions wins
@@ -74,10 +74,10 @@ Agentic-URL-Model-Eval/
 
 Configured in-file in script `main()`:
 
-- `MODEL_VERSION_NEW` (e.g., `"20250101"`) — alias **MLP1** 
-- `MODEL_VERSION_OLD` (e.g., `"20240101"`) — alias **ML**
+- `MODEL_VERSION_NEW` (e.g., `"20250101"`) 20250101 is not a valid model version for privacy reasons
+- `MODEL_VERSION_OLD` (e.g., `"20240101"`)  
 - `OUTPUT_FOLDER` (e.g., `/home/ubuntu/efs/urlmodel/data/output_data/`)
-- `MODEL_ID` (e.g., `anthropic.claude-opus-4-6-v1`)
+- `MODEL_ID` (e.g., `claude-opus`)
 
 ## Setup
 
