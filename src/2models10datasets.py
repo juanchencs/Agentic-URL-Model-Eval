@@ -288,8 +288,8 @@ def run_pipeline(model_version_new: str, model_version_old: str, input_folder: s
  
 if __name__ == "__main__":
     # Set values here directly.
-    MODEL_VERSION_NEW = "20250101" # keep private, 20250101 is not the actual model version
-    MODEL_VERSION_OLD = "20240101" # keep private, 20240101 is not the actual model version
+    MODEL_VERSION_NEW = "123456" # placeholder, not the actual model version
+    MODEL_VERSION_OLD = "654321" # placeholder, not the actual model version
     OUTPUT_FOLDER= "/home/ubuntu/efs/urlmodel/data/output_data/"  # keep private,  not the actual folder path
     INPUT_FOLDER = "/home/ubuntu/efs/urlmodel/data/input_data/"
      

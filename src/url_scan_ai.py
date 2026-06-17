@@ -255,7 +255,7 @@ def render_summary(summary_text: str, summary_path: Path, model_version: str, ou
 
 
 def cleanup_old_s3_objects(
-    bucket: str = "lrs-jane-s3",
+    bucket: str = "example-bucket",
     prefixes: tuple[str, ...] = (
         "mlmodels/urlmodel/input/",
         "mlmodels/urlmodel/output/",

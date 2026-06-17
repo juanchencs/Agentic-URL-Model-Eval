@@ -1,4 +1,8 @@
-# Architecture
+# A Tool-augmented agentic workflow for automated model evaluation and reporting
+
+## Architecture focus
+
+This workflow centers on a dual-agent design: an **Analyst agent** that generates summaries via tool calls and a **Reviewer agent** that validates accuracy and consistency.
 
 ## High-Level Components
 
@@ -24,6 +28,4 @@
 
 ## Diagram
 
-![System Architecture](images/system_architecture.png)
-
-> Copy your uploaded architecture image into `docs/images/system_architecture.png`.
+![Agentic dataflow](images/dataflow.svg)

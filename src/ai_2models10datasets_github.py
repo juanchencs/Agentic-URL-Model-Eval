@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import base64
 import json
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -30,6 +31,8 @@ import requests
 from langchain_aws import ChatBedrockConverse
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 from langchain_core.tools import tool
+import tomllib
+import callmodel
 
 
 THRESHOLD = 30.0
@@ -37,12 +40,13 @@ DATASET_FILE_RE = re.compile(
     r"^(?P<data_source>.+)_(?P<scan_type>url|domain)_(?P<flag>clean|mal|unknown)\.csv$"
 )
 
-DEFAULT_PARENT_PAGE_ID = "227064350366"
+DEFAULT_PARENT_PAGE_ID = " 1234567"
 DEFAULT_SPACE_KEY = "global"
 DEFAULT_CONFLUENCE_BASE = "https://your-domain.atlassian.net/wiki"
 
 DATASET_REGISTRY: dict[str, dict[str, Any]] = {}
 OVERALL_REGISTRY: dict[str, Any] = {}
+REVIEW_REGISTRY: dict[str, dict[str, Any]] = {}
 
 
 @dataclass
@@ -59,6 +63,7 @@ class DatasetResult:
     table_counts: dict[str, int]
     table_percent: dict[str, float]
     llm_summary_bullets: str
+    review_result: dict[str, Any]
 
 
 def parse_dataset_filename(path: Path) -> tuple[str, str, str] | None:
@@ -123,6 +128,14 @@ def get_overall_summary_context(_: str = "overall") -> str:
     return json.dumps(OVERALL_REGISTRY, ensure_ascii=False)
 
 
+@tool
+def get_review_context(dataset_key: str) -> str:
+    """Return JSON review context for one dataset key."""
+    if dataset_key not in REVIEW_REGISTRY:
+        return json.dumps({"error": f"unknown dataset_key {dataset_key}"})
+    return json.dumps(REVIEW_REGISTRY[dataset_key], ensure_ascii=False)
+
+
 def normalize_bullets(text: str) -> str:
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     output = []
@@ -138,6 +151,50 @@ def normalize_bullets(text: str) -> str:
         else:
             output.append(f"- {line}")
     return "\n".join(output) if output else "- (no summary)"
+
+
+def normalize_review_json_text(text: str) -> str:
+    candidate = text.strip()
+    if candidate.startswith("```"):
+        candidate = re.sub(r"^```(?:json)?\s*", "", candidate)
+        candidate = re.sub(r"\s*```$", "", candidate)
+        candidate = candidate.strip()
+    if candidate.startswith("{") and candidate.endswith("}"):
+        return candidate
+
+    start = candidate.find("{")
+    end = candidate.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        return candidate[start : end + 1]
+    return "{}"
+
+
+def parse_review_result(text: str) -> dict[str, Any]:
+    default_result = {
+        "quality_score": 1,
+        "approved": False,
+        "feedback": "Reviewer output parse failed.",
+    }
+    try:
+        raw = json.loads(normalize_review_json_text(text))
+    except Exception:
+        return default_result
+
+    quality_score = raw.get("quality_score", 1)
+    approved = raw.get("approved", False)
+    feedback = str(raw.get("feedback", "")).strip() or "No feedback provided."
+
+    try:
+        quality_score = int(quality_score)
+    except Exception:
+        quality_score = 1
+    quality_score = max(1, min(10, quality_score))
+    approved = bool(approved)
+    return {
+        "quality_score": quality_score,
+        "approved": approved,
+        "feedback": feedback,
+    }
 
 
 def run_tool_calling_agent(
@@ -185,7 +242,7 @@ def analyze_dataset_with_agent(
     model_version_old: str,
 ) -> str:
     system_prompt = (
-        "You are an ML engineer reviewing model performance. "
+        "You are Analyst AGENT, an ML engineer reviewing model performance. "
         "Always call get_dataset_context first, then return concise bullet points only. "
         "Do not include any intro sentence (for example: 'Here is my analysis'). "
         "Start directly with bullets."
@@ -204,6 +261,42 @@ def analyze_dataset_with_agent(
         tools=[get_dataset_context],
     )
     return normalize_bullets(text)
+
+
+def detect_dataset_anomalies(counts: dict[str, int], total_rows: int) -> list[str]:
+    anomalies: list[str] = []
+    if total_rows <= 0:
+        anomalies.append("Dataset has zero rows.")
+        return anomalies
+
+    if not anomalies:
+        anomalies.append("No major anomalies detected.")
+    return anomalies
+
+
+def review_dataset_with_agent(llm: ChatBedrockConverse, dataset_key: str) -> dict[str, Any]:
+    system_prompt = (
+        "You are REVIEWER AGENT. "
+        "You must call get_review_context and get_dataset_context before final answer. "
+        "Review dimensions: factual accuracy, completeness. "
+        "Output ONLY JSON with exact keys: "
+        '{"quality_score": 1-10, "approved": bool, "feedback": "..."}'
+    )
+    user_prompt = (
+        f"Review dataset `{dataset_key}`.\n"
+        "Review dimensions:\n"
+        "1) Factual accuracy — Are the numbers consistent with the data?\n"
+        "2) Clarity — Is the winner conclusion clear and supported?\n"
+       
+        "Return ONLY JSON. Do not return markdown or extra text."
+    )
+    text = run_tool_calling_agent(
+        llm=llm,
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        tools=[get_review_context, get_dataset_context],
+    )
+    return parse_review_result(text)
 
 
 def analyze_overall_with_agent(llm: ChatBedrockConverse) -> str:
@@ -402,25 +495,16 @@ def build_confluence_html(
 """.strip()
 
 
-def read_wiki_credentials(wiki_file: Path) -> tuple[str, str]:
-    text = wiki_file.read_text(encoding="utf-8").strip()
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
-
-    email = ""
-    token = ""
-    for line in lines:
-        if line.upper().startswith("EMAIL="):
-            email = line.split("=", 1)[1].strip()
-        if line.upper().startswith("TOKEN="):
-            token = line.split("=", 1)[1].strip()
-
+def read_wiki_credentials() -> tuple[str, str]:
+    pyproject_path = Path(__file__).resolve().parent / "pyproject.toml"
+    if not pyproject_path.exists():
+        raise FileNotFoundError("pyproject.toml not found for Confluence credentials.")
+    data = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
+    cfg = data.get("tool", {}).get("urlmodel", {})
+    email = os.getenv("CONFLUENCE_EMAIL") or cfg.get("confluence_email", "")
+    token = os.getenv("CONFLUENCE_TOKEN") or cfg.get("confluence_token", "")
     if not token:
-        if len(lines) >= 2 and "@" in lines[0]:
-            email, token = lines[0], lines[1]
-        elif len(lines) == 1:
-            token = lines[0]
-    if not token:
-        raise ValueError("Could not parse Confluence token from wiki_token.txt")
+        raise ValueError("Confluence token missing in pyproject.toml.")
     return email, token
 
 
@@ -536,7 +620,6 @@ def run_pipeline(
     confluence_base_url: str = DEFAULT_CONFLUENCE_BASE,
     confluence_space_key: str = DEFAULT_SPACE_KEY,
     confluence_parent_page_id: str = DEFAULT_PARENT_PAGE_ID,
-    wiki_token_file: str = "/home/ubuntu/efs/urlmodel/wiki_token.txt",
 ) -> dict[str, Any]:
     out_dir = Path(output_folder)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -553,7 +636,7 @@ def run_pipeline(
 
     llm = ChatBedrockConverse(
         model=model_id,
-        region_name="eu-west-2",
+        client=callmodel.get_bedrock_client(),
         temperature=0.2,
         max_tokens=900,
     )
@@ -585,6 +668,18 @@ def run_pipeline(
             model_version_new=model_version_new,
             model_version_old=model_version_old,
         )
+        REVIEW_REGISTRY[dataset_key] = {
+            "file_name": path.name,
+            "model_version_new": model_version_new,
+            "model_version_old": model_version_old,
+            "row_count": len(df),
+            "winner": winner,
+            "comparison_counts": counts,
+            "comparison_percentages": {k: round(v, 4) for k, v in pct.items()},
+            "detected_anomalies": detect_dataset_anomalies(counts, len(df)),
+            "analyst_summary_bullets": bullets,
+        }
+        review_result = review_dataset_with_agent(llm=llm, dataset_key=dataset_key)
 
         results.append(
             DatasetResult(
@@ -600,6 +695,7 @@ def run_pipeline(
                 table_counts=counts,
                 table_percent=pct,
                 llm_summary_bullets=bullets,
+                review_result=review_result,
             )
         )
 
@@ -634,7 +730,7 @@ def run_pipeline(
     confluence_error = ""
     if confluence_publish:
         try:
-            email, token = read_wiki_credentials(Path(wiki_token_file))
+            email, token = read_wiki_credentials()
             confluence_page_id = confluence_upsert_subpage(
                 base_url=confluence_base_url,
                 space_key=confluence_space_key,
@@ -691,20 +787,20 @@ def run_pipeline(
         "confluence_page_id": confluence_page_id,
         "published_to_confluence": bool(confluence_page_id),
         "confluence_error": confluence_error,
+        "review_results": {r.file_name: r.review_result for r in results},
     }
 
 
 def main(CONFLUENCE_PUBLISH: bool = False) -> None:
-    MODEL_VERSION_NEW = "123456"  # alias: MLP1, placeholder
-    MODEL_VERSION_OLD = "654321"  # alias: ML, placeholder
+    MODEL_VERSION_NEW = "123456"  # alias: MLP1 (placeholder)
+    MODEL_VERSION_OLD = "654321"  # alias: ML (placeholder)
     OUTPUT_FOLDER = "/home/ubuntu/efs/urlmodel/data/output_data/"
     MODEL_ID = "anthropic.claude-opus-4-6-v1"
-
-    CONFLUENCE_BASE_URL = "https://aaaaa.atlassian.net/wiki" #keep private, not the actual base url
-    CONFLUENCE_SPACE_KEY = "global" #keep private, not the actual space key
-    CONFLUENCE_PARENT_PAGE_ID = "1234567890" # keep private, not the actual parent page id
-    WIKI_TOKEN_FILE = "/home/ubuntu/efs/urlmodel/wiki_token.txt" # placeholder token file path
-
+ 
+    
+    CONFLUENCE_BASE_URL = "https://aaaaa.atlassian.net/wiki"
+    CONFLUENCE_SPACE_KEY = "global"
+    CONFLUENCE_PARENT_PAGE_ID = "1234567"
     result = run_pipeline(
         model_version_new=MODEL_VERSION_NEW,
         model_version_old=MODEL_VERSION_OLD,
@@ -714,7 +810,6 @@ def main(CONFLUENCE_PUBLISH: bool = False) -> None:
         confluence_base_url=CONFLUENCE_BASE_URL,
         confluence_space_key=CONFLUENCE_SPACE_KEY,
         confluence_parent_page_id=CONFLUENCE_PARENT_PAGE_ID,
-        wiki_token_file=WIKI_TOKEN_FILE,
     )
     print("Done.")
     print(json.dumps(result, indent=2))

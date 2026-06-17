@@ -1,6 +1,6 @@
-# Dataflow
+# A Tool-augmented agentic workflow for automated model evaluation and reporting
 
-## End-to-End Pipeline
+## Agentic pipeline
 
 1. Read `OUTPUT_FOLDER` and build `INPUT_LIST`
 2. Parse metadata from filename:
@@ -24,6 +24,4 @@
 
 ## Diagram
 
-![Data Workflow](images/data_workflow.png)
-
-> Copy your uploaded workflow image into `docs/images/data_workflow.png`.
+![Agentic dataflow](images/dataflow.svg)

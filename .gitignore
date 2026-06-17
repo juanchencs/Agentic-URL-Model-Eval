@@ -27,5 +27,5 @@ data/output_data/
 !docs/images/*.png
 
 # Secrets
-wiki_jane.txt
+wiki_token.txt
 .env

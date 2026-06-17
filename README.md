@@ -1,49 +1,31 @@
-# Agentic-URL-Model-Eval
+# A Tool-augmented agentic workflow for automated model evaluation and reporting
 
-Agentic workflow for comparing two URL/domain ML model versions across multiple datasets, with Bedrock + LangChain analysis and optional Confluence publishing.
+This repository provides a dual-agent evaluation pipeline that compares two URL/domain ML models across multiple datasets and produces reviewed, publishable reports. The workflow centers on an **Analyst agent** (summaries) and a **Reviewer agent** (quality gate).
 
-## Project Title
+## Why an agentic workflow
 
-**URLEval AI — Automated ML Model Comparison with AI Insights**
+- **Tool selection:** the analyst invokes structured tools for dataset and overall context.
+- **Conversational memory:** shared registries keep dataset-level context across steps.
+- **Dual-agent design:** the reviewer validates the analyst output for accuracy and format.
 
-## What This Project Does
+## Workflow overview
 
-- Reads all valid dataset CSVs under an output folder using pattern:
-  - `{DATA_SOURCE}_{TYPE}_{FLAG}.csv`
-- Validates required columns:
-  - `score{MODEL_VERSION_NEW}`
-  - `score{MODEL_VERSION_OLD}`
-- Computes conviction metrics at threshold `score >= threshold`
-- Applies winner logic:
-  - **FP datasets (`clean`)**: fewer convictions wins
-  - **FN datasets (`mal`)**: more convictions wins
-  - equal convictions: same performance
-- Uses **LangChain tool/function calling** + **AWS Bedrock Converse (Claude)** to generate concise per-dataset and overall summaries
-- Builds a Confluence-compatible HTML page and can publish it to a specified Confluence parent page
+1. Discover dataset files named `{DATA_SOURCE}_{TYPE}_{FLAG}.csv`.
+2. Validate required score columns for both model versions.
+3. Compute per-dataset comparison tables (counts + percentages).
+4. **Analyst agent** generates evidence-backed bullet summaries via tool calls.
+5. **Reviewer agent** audits the summaries and records approval feedback.
+6. Build Confluence-ready HTML and optional report artifacts.
 
-## Core Scripts
+## Core scripts
 
-- `src/2models10datasets.py`
-  - orchestrates scanning two model versions across input datasets and produces combined CSV outputs
-- `src/ai_2models10datasets.py`
-  - performs model comparison analytics, agentic LLM summary generation, and Confluence-compatible report creation/publishing
-- `src/url_scan_ai.py`
-  - API helper module for start/poll/download/upload flow
+- `src/2models10datasets.py`: scans two model versions across input datasets.
+- `src/ai_2models10datasets.py`: comparison analytics + agent summaries + report output.
+- `src/url_scan_ai.py`: API helper for scan orchestration.
 
-## Architecture & Data Workflow Diagrams
+## Dataflow
 
-> Place your uploaded diagrams here before pushing:
->
-> - `docs/images/system_architecture.png`
-> - `docs/images/data_workflow.png`
-
-### System Architecture
-
-![System Architecture](docs/images/system_architecture.png)
-
-### Data Workflow
-
-![Data Workflow](docs/images/data_workflow.png)
+![Agentic dataflow](docs/images/dataflow.svg)
 
 ## Repository Structure
 
@@ -72,11 +54,11 @@ Agentic-URL-Model-Eval/
 
 ## Parameters
 
-Configured in-file in script `main()`:
+Configured in `main()`:
 
-- `MODEL_VERSION_NEW` (e.g., `"20250101"`) 20250101 is not a valid model version for privacy reasons
-- `MODEL_VERSION_OLD` (e.g., `"20240101"`)  
-- `OUTPUT_FOLDER` (e.g., `/home/ubuntu/efs/urlmodel/data/output_data/`)
+- `MODEL_VERSION_NEW` (e.g., `"123456"`)
+- `MODEL_VERSION_OLD` (e.g., `"654321"`)
+- `OUTPUT_FOLDER` (e.g., `/path/to/output_data/`)
 - `MODEL_ID` (e.g., `claude-opus`)
 
 ## Setup
@@ -107,7 +89,6 @@ Edit `main(CONFLUENCE_PUBLISH=...)` in `src/ai_2models10datasets.py` and set:
 
 - `CONFLUENCE_PUBLISH=True`
 - parent page id / space / base URL
-- credentials file path (e.g. `****config`)
 
 ## Notes
 

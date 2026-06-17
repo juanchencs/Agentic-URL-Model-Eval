@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600">
+  <rect width="1200" height="600" fill="#ffffff"/>
+  <text x="600" y="40" text-anchor="middle" font-family="Arial" font-size="20" fill="#0f172a">
+    A Tool-augmented agentic workflow for automated model evaluation and reporting
+  </text>
+
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <rect x="70" y="110" width="200" height="90" rx="10" fill="#dbeafe" stroke="#1e3a8a" stroke-width="2"/>
+  <text x="170" y="145" text-anchor="middle" font-family="Arial" font-size="14" fill="#0f172a">
+    Dataset discovery
+  </text>
+  <text x="170" y="170" text-anchor="middle" font-family="Arial" font-size="12" fill="#0f172a">
+    CSV validation
+  </text>
+
+  <rect x="330" y="110" width="200" height="90" rx="10" fill="#dcfce7" stroke="#166534" stroke-width="2"/>
+  <text x="430" y="145" text-anchor="middle" font-family="Arial" font-size="14" fill="#0f172a">
+    Metrics engine
+  </text>
+  <text x="430" y="170" text-anchor="middle" font-family="Arial" font-size="12" fill="#0f172a">
+    Counts + percentages
+  </text>
+
+  <rect x="590" y="90" width="220" height="110" rx="10" fill="#e0e7ff" stroke="#3730a3" stroke-width="2"/>
+  <text x="700" y="130" text-anchor="middle" font-family="Arial" font-size="14" fill="#0f172a">
+    Analyst agent
+  </text>
+  <text x="700" y="155" text-anchor="middle" font-family="Arial" font-size="12" fill="#0f172a">
+    Tool-calling summaries
+  </text>
+  <text x="700" y="180" text-anchor="middle" font-family="Arial" font-size="12" fill="#0f172a">
+    Evidence-backed bullets
+  </text>
+
+  <rect x="870" y="90" width="220" height="110" rx="10" fill="#fef9c3" stroke="#a16207" stroke-width="2"/>
+  <text x="980" y="130" text-anchor="middle" font-family="Arial" font-size="14" fill="#0f172a">
+    Reviewer agent
+  </text>
+  <text x="980" y="155" text-anchor="middle" font-family="Arial" font-size="12" fill="#0f172a">
+    QA + approval
+  </text>
+  <text x="980" y="180" text-anchor="middle" font-family="Arial" font-size="12" fill="#0f172a">
+    Consistency checks
+  </text>
+
+  <rect x="220" y="270" width="260" height="90" rx="10" fill="#fae8ff" stroke="#86198f" stroke-width="2"/>
+  <text x="350" y="305" text-anchor="middle" font-family="Arial" font-size="14" fill="#0f172a">
+    Shared registries
+  </text>
+  <text x="350" y="330" text-anchor="middle" font-family="Arial" font-size="12" fill="#0f172a">
+    Conversational memory
+  </text>
+
+  <rect x="560" y="270" width="260" height="90" rx="10" fill="#cffafe" stroke="#155e75" stroke-width="2"/>
+  <text x="690" y="305" text-anchor="middle" font-family="Arial" font-size="14" fill="#0f172a">
+    Reporting output
+  </text>
+  <text x="690" y="330" text-anchor="middle" font-family="Arial" font-size="12" fill="#0f172a">
+    HTML + optional Confluence
+  </text>
+
+  <rect x="870" y="270" width="220" height="90" rx="10" fill="#ffedd5" stroke="#9a3412" stroke-width="2"/>
+  <text x="980" y="305" text-anchor="middle" font-family="Arial" font-size="14" fill="#0f172a">
+    Final artifacts
+  </text>
+  <text x="980" y="330" text-anchor="middle" font-family="Arial" font-size="12" fill="#0f172a">
+    Summary + review
+  </text>
+
+  <line x1="270" y1="155" x2="330" y2="155" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="530" y1="155" x2="590" y2="155" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="810" y1="155" x2="870" y2="155" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="700" y1="200" x2="700" y2="270" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="480" y1="315" x2="560" y2="315" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="820" y1="315" x2="870" y2="315" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+</svg>

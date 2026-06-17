@@ -1,4 +1,10 @@
-# Design
+# A Tool-augmented agentic workflow for automated model evaluation and reporting
+
+## Agentic design highlights
+
+- **Dual-agent pattern:** Analyst agent synthesizes evidence; Reviewer agent validates accuracy.
+- **Tool-augmented reasoning:** Agents call structured tools for dataset and overall context.
+- **Conversational memory:** Shared registries keep context across agent turns.
 
 ## Key Parameters
 
@@ -16,10 +22,11 @@
 - equal convictions:
   - same performance
 
-## Agentic Workflow
+## Agentic workflow
 
-1. Discover valid datasets
-2. Compute table metrics
-3. Register per-dataset and overall context
-4. Run LLM analysis with tool/function calling
-5. Build HTML sections and optional Confluence publish
+1. Discover valid datasets.
+2. Compute comparison metrics and totals.
+3. Register per-dataset and overall context.
+4. Analyst agent generates bullet summaries using tools.
+5. Reviewer agent audits and records approval feedback.
+6. Build HTML sections and optional Confluence publish.
