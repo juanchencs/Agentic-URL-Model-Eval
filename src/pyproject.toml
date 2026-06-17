@@ -11,6 +11,6 @@ dependencies = [
 ]
 
 [tool.urlmodel]
-api_key = "aaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-confluence_email = "cccc.dddd@bbbbb.com.au"
-confluence_token = "TOKEN=dddddddddddddddddd"
+api_key = ""
+confluence_email = ""
+confluence_token = ""

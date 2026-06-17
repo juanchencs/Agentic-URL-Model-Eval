@@ -3,7 +3,7 @@
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python&logoColor=white)
 ![AWS Bedrock](https://img.shields.io/badge/AWS-Bedrock-FF9900?logo=amazonaws&logoColor=white)
 ![LangChain](https://img.shields.io/badge/LangChain-Tool_Calling-2ECC71?logo=chainlink&logoColor=white)
-![Claude](https://img.shields.io/badge/Anthropic-Claude_Opus_4-blueviolet)
+![Foundation Model](https://img.shields.io/badge/Foundation_Model-Bedrock-blueviolet)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Status](https://img.shields.io/badge/Status-Production-brightgreen)
 
@@ -239,7 +239,7 @@ The agent maintains a **growing message history** within each session:
 | Component           | Technology                                    |
 | ------------------- | --------------------------------------------- |
 | **Language**        | Python 3.11+                                  |
-| **LLM Provider**    | AWS Bedrock (Anthropic Claude Opus 4)         |
+| **LLM Provider**    | AWS Bedrock (foundation model via env config) |
 | **Agent Framework** | LangChain (`langchain_aws`, `langchain_core`) |
 | **Data Processing** | Pandas                                        |
 | **Configuration**   | `tomllib` + environment variables             |
@@ -336,8 +336,8 @@ export CONFLUENCE_TOKEN=your-api-token
 
 ```toml
 [tool.urlmodel]
-confluence_email = "your-email@company.com"
-confluence_token = "your-api-token"
+confluence_email = ""
+confluence_token = ""
 ```
 
 Configuration is stored in `src/pyproject.toml`.
@@ -348,7 +348,7 @@ Configuration is stored in `src/pyproject.toml`.
 MODEL_VERSION_NEW = "123456"    # MLP1 - placeholder
 MODEL_VERSION_OLD = "654321"    # ML   - placeholder
 OUTPUT_FOLDER = "/path/to/output_data/"  # Folder containing dataset CSVs
-MODEL_ID = "anthropic.claude-opus-4-6-v1"  # Bedrock model ID
+MODEL_ID = "<FOUNDATION_MODEL_ID>"  # Bedrock model ID (placeholder)
 ```
 
 ---
@@ -516,7 +516,7 @@ def decide_winner(flag, counts):
 
 | Technique                  | Implementation                           |
 | -------------------------- | ---------------------------------------- |
-| AWS Bedrock                | `ChatBedrockConverse` with Claude Opus 4 |
+| AWS Bedrock                | `ChatBedrockConverse` with a foundation model (env-configured) |
 | Enterprise API Integration | Confluence REST API (CRUD + attachments) |
 | Config Management          | `pyproject.toml` + env vars              |
 | Auth Patterns              | Basic auth + Bearer token support        |
@@ -536,7 +536,7 @@ def decide_winner(flag, counts):
 
 ## 💰 Cost Estimation
 
-### AWS Bedrock (Claude Opus 4) — Per Run
+### AWS Bedrock (Foundation Model) — Per Run
 
 
 | Component                     | Est. Tokens                   | Est. Cost  |
@@ -547,7 +547,7 @@ def decide_winner(flag, counts):
 | **Total per run**             |                               | **~$1.40** |
 
 
-> 💡 Costs vary with dataset count and model pricing. Claude Sonnet can be used as a lower-cost alternative.
+> 💡 Costs vary with dataset count and model pricing. Use a lower-cost foundation model for routine runs if needed.
 
 ---
 

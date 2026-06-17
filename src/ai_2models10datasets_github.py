@@ -504,7 +504,7 @@ def read_wiki_credentials() -> tuple[str, str]:
     email = os.getenv("CONFLUENCE_EMAIL") or cfg.get("confluence_email", "")
     token = os.getenv("CONFLUENCE_TOKEN") or cfg.get("confluence_token", "")
     if not token:
-        raise ValueError("Confluence token missing in pyproject.toml.")
+        raise ValueError("Confluence token missing (set CONFLUENCE_TOKEN or tool.urlmodel.confluence_token).")
     return email, token
 
 
@@ -795,7 +795,7 @@ def main(CONFLUENCE_PUBLISH: bool = False) -> None:
     MODEL_VERSION_NEW = "123456"  # alias: MLP1 (placeholder)
     MODEL_VERSION_OLD = "654321"  # alias: ML (placeholder)
     OUTPUT_FOLDER = "/home/ubuntu/efs/urlmodel/data/output_data/"
-    MODEL_ID = "anthropic.claude-opus-4-6-v1"
+    MODEL_ID = os.getenv("FOUNDATION_MODEL_ID", "<FOUNDATION_MODEL_ID>")
  
     
     CONFLUENCE_BASE_URL = "https://aaaaa.atlassian.net/wiki"

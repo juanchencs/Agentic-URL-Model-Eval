@@ -12,10 +12,10 @@ from requests.exceptions import RequestException
 from datetime import datetime
 
 
-BEDROCK_ROLE_ARN='arn:aws:iam::1111111111:role/aaa-unified-llm-role'
-BEDROCK_EXTERNAL_ID='cccccccc'
-BEDROCK_AWS_ACCESS_KEY_ID='bbbbbbbb'
-BEDROCK_AWS_SECRET_ACCESS_KEY='aaaaaaaaaa'
+BEDROCK_ROLE_ARN = os.getenv("BEDROCK_ROLE_ARN", "")
+BEDROCK_EXTERNAL_ID = os.getenv("BEDROCK_EXTERNAL_ID", "")
+BEDROCK_AWS_ACCESS_KEY_ID = os.getenv("BEDROCK_AWS_ACCESS_KEY_ID", "")
+BEDROCK_AWS_SECRET_ACCESS_KEY = os.getenv("BEDROCK_AWS_SECRET_ACCESS_KEY", "")
  
 
 
@@ -30,7 +30,7 @@ _bedrock_client = None
 _bedrock_client_expiry = 0.0
 
 # ---------------------------------------------------------------------------
-AWS_REGION='eu-west-2'
+AWS_REGION = os.getenv("AWS_REGION", "eu-west-2")
 
 def _get_sts_client():
     """Return an STS client using dedicated Bedrock credentials from config."""

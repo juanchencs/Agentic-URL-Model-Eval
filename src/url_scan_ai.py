@@ -22,15 +22,15 @@ except Exception:
     
 #!/usr/bin/env python3
 THRESHOLD = 30.0
-REGION = "eu-west-2"
-API_BASE = "https://****.execute-api.eu-west-2.amazonaws.com/prod" # is kept private
-BUCKET = "*****"  # bucket name is kept private
+REGION = os.getenv("AWS_REGION", "eu-west-2")
+API_BASE = os.getenv("URLMODEL_API_BASE", "https://example.execute-api.example-region.amazonaws.com/prod")
+BUCKET = os.getenv("URLMODEL_BUCKET", "example-bucket")
 INPUT_PREFIX = "mlmodels/urlmodel/input"
-API_KEY='****' #  is kept private
+API_KEY = os.getenv("URLMODEL_API_KEY", "")
  
-# Required env vars:
-# AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION=eu-west-2
-# URLMODEL_API_KEY=<your-api-key>
+# Credentials:
+# - Prefer IAM role / default AWS credential chain (recommended)
+# - URLMODEL_API_KEY should be provided via environment variable
  
 
 s3 = boto3.client("s3", region_name=REGION)
