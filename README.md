@@ -108,30 +108,32 @@ This project automates the **end-to-end comparison of two ML URL/domain classifi
      └────────────────┘       └─────────────────┘
 ```
 
-### System Architecture
+### Evaluation Architecture
 
-![System Architecture](docs/images/system_architecture.png)
+![Evaluation Architecture](docs/images/evaluation_architecture.png)
 
-### Data Workflow
+### Agentic Dataflow
 
-![Data Workflow](docs/images/data_workflow.png)
+![Agentic Dataflow](docs/images/dataflow.svg)
 
 ---
 
 ## ✨ Key Features
 
-| Feature | Description |
-|---------|-------------|
-| 🤖 **Dual-Agent QA** | Analyst generates insights → Reviewer validates accuracy |
-| 🔧 **Auto Tool Selection** | LLM autonomously decides which data-fetching tools to call |
-| 🧠 **Conversational Memory** | Agent maintains message history across multi-turn reasoning |
-| 📊 **Auto Dataset Discovery** | Regex-based CSV detection with column validation |
-| 📈 **Statistical Comparison** | Conviction counts, percentages, FP/FN winner logic |
-| 🔍 **Anomaly Detection** | Flags data quality issues before AI analysis |
-| 🧹 **LLM Output Sanitization** | Multi-layer cleaning: markdown → bullets → HTML |
-| 📝 **Confluence Publishing** | Idempotent upsert with attachment linking |
-| ⚙️ **Configurable** | `pyproject.toml` + environment variables |
-| 🔐 **Security** | HTML escaping, auth flexibility (Basic / Bearer) |
+
+| Feature                        | Description                                                 |
+| ------------------------------ | ----------------------------------------------------------- |
+| 🤖 **Dual-Agent QA**           | Analyst generates insights → Reviewer validates accuracy    |
+| 🔧 **Auto Tool Selection**     | LLM autonomously decides which data-fetching tools to call  |
+| 🧠 **Conversational Memory**   | Agent maintains message history across multi-turn reasoning |
+| 📊 **Auto Dataset Discovery**  | Regex-based CSV detection with column validation            |
+| 📈 **Statistical Comparison**  | Conviction counts, percentages, FP/FN winner logic          |
+| 🔍 **Anomaly Detection**       | Flags data quality issues before AI analysis                |
+| 🧹 **LLM Output Sanitization** | Multi-layer cleaning: markdown → bullets → HTML             |
+| 📝 **Confluence Publishing**   | Idempotent upsert with attachment linking                   |
+| ⚙️ **Configurable**            | `pyproject.toml` + environment variables                    |
+| 🔐 **Security**                | HTML escaping, auth flexibility (Basic / Bearer)            |
+
 
 ---
 
@@ -163,11 +165,13 @@ The pipeline employs a **separation-of-concerns** approach inspired by real ML e
 ```
 
 **Analyst Agent** — Optimizes for *insight quality*:
+
 - Calls `get_dataset_context` to retrieve metrics
 - Returns ≤4 concise bullet points with numeric evidence
 - Determines winner conclusion (FP/FN tradeoff)
 
 **Reviewer Agent** — Optimizes for *factual accuracy*:
+
 - Calls **both** `get_review_context` and `get_dataset_context`
 - Reviews: Are numbers consistent? Is the conclusion supported?
 - Returns structured JSON: `quality_score`, `approved`, `feedback`
@@ -193,6 +197,7 @@ def get_review_context(dataset_key: str) -> str:
 ```
 
 The LLM receives tool schemas via `llm.bind_tools(tools)`, then:
+
 1. **Reasons** about which tool(s) are needed
 2. **Generates** tool call(s) with appropriate arguments
 3. **Receives** tool results as `ToolMessage`
@@ -221,6 +226,7 @@ def run_tool_calling_agent(llm, system_prompt, user_prompt, tools) -> str:
 ```
 
 The agent maintains a **growing message history** within each session:
+
 - Remembers which tools it already called
 - Accumulates context from multiple tool results
 - Can chain tool calls across iterations (up to 6 rounds)
@@ -229,50 +235,60 @@ The agent maintains a **growing message history** within each session:
 
 ## 🛠 Tech Stack
 
-| Component | Technology |
-|-----------|-----------|
-| **Language** | Python 3.11+ |
-| **LLM Provider** | AWS Bedrock (Anthropic Claude Opus 4) |
+
+| Component           | Technology                                    |
+| ------------------- | --------------------------------------------- |
+| **Language**        | Python 3.11+                                  |
+| **LLM Provider**    | AWS Bedrock (Anthropic Claude Opus 4)         |
 | **Agent Framework** | LangChain (`langchain_aws`, `langchain_core`) |
-| **Data Processing** | Pandas |
-| **Configuration** | `tomllib` + environment variables |
-| **Publishing** | Confluence REST API v1 |
-| **HTTP Client** | Requests |
+| **Data Processing** | Pandas                                        |
+| **Configuration**   | `tomllib` + environment variables             |
+| **Publishing**      | Confluence REST API v1                        |
+| **HTTP Client**     | Requests                                      |
+
 
 ---
 
 ## 📁 Project Structure
 
 ```
-urlmodel/
-├── ai_2models10datasets_review.py   # Main pipeline script
-├── callmodel.py                     # AWS Bedrock client factory
-├── pyproject.toml                   # Project config + Confluence credentials
-├── data/
-│   └── output_data/                 # OUTPUT_FOLDER
-│       ├── tranco_url_clean.csv
-│       ├── phishtank_domain_mal.csv
-│       ├── openphish_url_mal.csv
-│       ├── internal_url_unknown.csv
-│       └── ...                      # Auto-discovered CSVs
-└── README.md
+Agentic-URL-Model-Eval/
+├── README.md
+├── README01.md
+├── docs/
+│   ├── architecture.md
+│   ├── dataflow.md
+│   ├── design.md
+│   └── images/
+│       ├── dataflow.svg
+│       └── evaluation_architecture.png
+└── src/
+    ├── 2models10datasets.py               # Runs two-model scans and merges outputs
+    ├── ai_2models10datasets_github.py     # Main agentic workflow + publishing
+    ├── callmodel.py                       # Bedrock client factory
+    ├── pyproject.toml                     # Config + Confluence credentials
+    ├── run_scan.sh                        # Worker-side scan runner
+    └── url_scan_ai.py                     # API orchestration helpers
 ```
 
 ### Dataset File Naming Convention
 
 Files must match: `{DATA_SOURCE}_{TYPE}_{FLAG}.csv`
 
-| Component | Values | Example |
-|-----------|--------|---------|
-| `DATA_SOURCE` | Any string | `tranco`, `phishtank`, `openphish` |
-| `TYPE` | `url` or `domain` | `url` |
-| `FLAG` | `clean`, `mal`, or `unknown` | `clean` |
+
+| Component     | Values                       | Example                            |
+| ------------- | ---------------------------- | ---------------------------------- |
+| `DATA_SOURCE` | Any string                   | `tranco`, `phishtank`, `openphish` |
+| `TYPE`        | `url` or `domain`            | `url`                              |
+| `FLAG`        | `clean`, `mal`, or `unknown` | `clean`                            |
+
 
 Example: `tranco_url_clean.csv`, `phishtank_domain_mal.csv`
 
 ### Required CSV Columns
 
 Each CSV must contain:
+
 - `score{MODEL_VERSION_NEW}` — e.g., `score123456` (MLP1 model scores)
 - `score{MODEL_VERSION_OLD}` — e.g., `score654321` (ML model scores)
 
@@ -290,8 +306,8 @@ Each CSV must contain:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/ai-model-comparison-pipeline.git
-cd ai-model-comparison-pipeline
+git clone git@github-juanchencs:juanchencs/Agentic-URL-Model-Eval.git
+cd Agentic-URL-Model-Eval
 
 # Create virtual environment
 python -m venv .venv
@@ -324,12 +340,14 @@ confluence_email = "your-email@company.com"
 confluence_token = "your-api-token"
 ```
 
+Configuration is stored in `src/pyproject.toml`.
+
 ### Pipeline Parameters (in `main()`)
 
 ```python
 MODEL_VERSION_NEW = "123456"    # MLP1 - placeholder
 MODEL_VERSION_OLD = "654321"    # ML   - placeholder
-OUTPUT_FOLDER = "/path/to/csvs/"  # Folder containing dataset CSVs
+OUTPUT_FOLDER = "/path/to/output_data/"  # Folder containing dataset CSVs
 MODEL_ID = "anthropic.claude-opus-4-6-v1"  # Bedrock model ID
 ```
 
@@ -337,16 +355,23 @@ MODEL_ID = "anthropic.claude-opus-4-6-v1"  # Bedrock model ID
 
 ## 💻 Usage
 
+### Run two-model scanning + merged outputs
+
+```bash
+python src/2models10datasets.py
+```
+
 ### Basic Run (Local Report Only)
 
 ```bash
-python ai_2models10datasets_review.py
+python src/ai_2models10datasets_github.py
 ```
 
 This will:
+
 1. Discover all valid CSVs in `OUTPUT_FOLDER`
-2. Run statistical analysis + AI agents
-3. Save HTML report locally
+2. Run statistical analysis + dual-agent summaries
+3. Save HTML report locally (and optionally publish)
 
 ### With Confluence Publishing
 
@@ -439,12 +464,14 @@ def decide_winner(flag, counts):
 
 ### Overall Summary Table
 
-| Dataset | Rows | ML Convicted | MLP1 Convicted | Winner |
-|---------|------|-------------|----------------|--------|
-| tranco_url_clean | 10,000 | 12 (0.12%) | 8 (0.08%) | MLP1 wins (fewer FPs) |
-| phishtank_domain_mal | 5,000 | 4,850 (97.00%) | 4,920 (98.40%) | MLP1 wins (fewer FNs) |
-| openphish_url_mal | 3,000 | 2,910 (97.00%) | 2,955 (98.50%) | MLP1 wins (fewer FNs) |
-| internal_url_unknown | 8,000 | 320 (4.00%) | 295 (3.69%) | Review manually |
+
+| Dataset              | Rows   | ML Convicted   | MLP1 Convicted | Winner                |
+| -------------------- | ------ | -------------- | -------------- | --------------------- |
+| tranco_url_clean     | 10,000 | 12 (0.12%)     | 8 (0.08%)      | MLP1 wins (fewer FPs) |
+| phishtank_domain_mal | 5,000  | 4,850 (97.00%) | 4,920 (98.40%) | MLP1 wins (fewer FNs) |
+| openphish_url_mal    | 3,000  | 2,910 (97.00%) | 2,955 (98.50%) | MLP1 wins (fewer FNs) |
+| internal_url_unknown | 8,000  | 320 (4.00%)    | 295 (3.69%)    | Review manually       |
+
 
 ### Per-Dataset AI Analysis (Example)
 
@@ -473,71 +500,54 @@ def decide_winner(flag, counts):
 
 ### 🤖 LLM & Agentic AI
 
-| Technique | Implementation |
-|-----------|---------------|
-| ReAct Agent Pattern | `run_tool_calling_agent()` — iterative reason + act loop |
-| Function/Tool Calling | `@tool` decorators + `llm.bind_tools()` |
-| Multi-Agent Orchestration | Analyst → Reviewer → Overall agents |
-| Prompt Engineering | Role-based system prompts + output constraints |
-| LLM Output Parsing | `normalize_bullets()`, `parse_review_result()` |
-| Structured Output | JSON schema enforcement for Reviewer |
+
+| Technique                 | Implementation                                           |
+| ------------------------- | -------------------------------------------------------- |
+| ReAct Agent Pattern       | `run_tool_calling_agent()` — iterative reason + act loop |
+| Function/Tool Calling     | `@tool` decorators + `llm.bind_tools()`                  |
+| Multi-Agent Orchestration | Analyst → Reviewer → Overall agents                      |
+| Prompt Engineering        | Role-based system prompts + output constraints           |
+| LLM Output Parsing        | `normalize_bullets()`, `parse_review_result()`           |
+| Structured Output         | JSON schema enforcement for Reviewer                     |
+
 
 ### ☁️ Cloud & Infrastructure
 
-| Technique | Implementation |
-|-----------|---------------|
-| AWS Bedrock | `ChatBedrockConverse` with Claude Opus 4 |
+
+| Technique                  | Implementation                           |
+| -------------------------- | ---------------------------------------- |
+| AWS Bedrock                | `ChatBedrockConverse` with Claude Opus 4 |
 | Enterprise API Integration | Confluence REST API (CRUD + attachments) |
-| Config Management | `pyproject.toml` + env vars |
-| Auth Patterns | Basic auth + Bearer token support |
+| Config Management          | `pyproject.toml` + env vars              |
+| Auth Patterns              | Basic auth + Bearer token support        |
 
-### 📊 Data & ML Engineering
 
-| Technique | Implementation |
-|-----------|---------------|
-| Model Evaluation | FP/FN analysis across labeled datasets |
-| Statistical Comparison | Conviction rates, cross-model delta |
-| Data Pipeline | Auto-discovery → validate → compute → report |
-| Anomaly Detection | Pre-analysis data quality checks |
-| A/B Model Comparison | Version-aware scoring (MLP1 vs ML) |
+### 📊 ML 
 
-### 🏗️ Software Engineering
 
-| Technique | Implementation |
-|-----------|---------------|
-| Type Hints | Full typing throughout (`-> tuple[str, str, str] \| None`) |
-| Dataclasses | `DatasetResult` for structured results |
-| Idempotent Operations | Confluence upsert (create-or-update) |
-| XSS Prevention | `html_escape()` on all user-facing content |
-| Modular Design | Separation: compute / agent / render / publish |
+| Technique              | Implementation                               |
+| ---------------------- | -------------------------------------------- |
+| Model Evaluation       | FP/FN analysis across labeled datasets       |
+| Statistical Comparison | Conviction rates, cross-model delta          |
+| Data Pipeline          | Auto-discovery → validate → compute → report |
+| Anomaly Detection      | Pre-analysis data quality checks             |
+| A/B Model Comparison   | Version-aware scoring (MLP1 vs ML)           |
 
----
 
 ## 💰 Cost Estimation
 
 ### AWS Bedrock (Claude Opus 4) — Per Run
 
-| Component | Est. Tokens | Est. Cost |
-|-----------|------------|-----------|
-| Analyst Agent (×10 datasets) | ~30,000 input + ~4,000 output | ~$0.60 |
-| Reviewer Agent (×10 datasets) | ~40,000 input + ~2,000 output | ~$0.70 |
-| Overall Agent (×1) | ~5,000 input + ~500 output | ~$0.10 |
-| **Total per run** | | **~$1.40** |
+
+| Component                     | Est. Tokens                   | Est. Cost  |
+| ----------------------------- | ----------------------------- | ---------- |
+| Analyst Agent (×10 datasets)  | ~30,000 input + ~4,000 output | ~$0.60     |
+| Reviewer Agent (×10 datasets) | ~40,000 input + ~2,000 output | ~$0.70     |
+| Overall Agent (×1)            | ~5,000 input + ~500 output    | ~$0.10     |
+| **Total per run**             |                               | **~$1.40** |
+
 
 > 💡 Costs vary with dataset count and model pricing. Claude Sonnet can be used as a lower-cost alternative.
-
----
-
-## 🗺 Roadmap
-
-- [ ] **Self-Healing Loop** — Retry analysis when Reviewer returns `approved: false`
-- [ ] **LangGraph Integration** — Visual state machine for agent orchestration
-- [ ] **Streaming Output** — Real-time progress feedback during agent execution
-- [ ] **Cost Tracking** — Per-agent token usage and cost logging
-- [ ] **Airflow DAG** — Scheduled automated reporting
-- [ ] **Slack/Teams Notifications** — Alert on completion or review failures
-- [ ] **Model Score Drift Detection** — Track score distributions over time
-- [ ] **Interactive Dashboard** — Streamlit/Gradio UI for report exploration
 
 ---
 
@@ -576,6 +586,4 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 ---
 
-<p align="center">
-  <b>Built with 🤖 Agentic AI + ☁️ AWS Bedrock + 🔗 LangChain</b>
-</p>
+**Built with 🤖 Agentic AI + ☁️ AWS Bedrock + 🔗 LangChain**
